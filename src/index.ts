@@ -38,6 +38,8 @@ export class Session {
             } else {
                 throw new Error('Unsupport Session Driver:' + config.Driver)
             }
+            this._driver = new driver.default();
+            await this._driver.start(this._ctx, config.Config);
             let SessionID = await this._ctx.config.getSessionID();
             while (!SessionID) {
                 SessionID = await this._ctx.config.getNewSessionID();
@@ -49,8 +51,6 @@ export class Session {
                 }
             }
             this._session_id = SessionID;
-            this._driver = new driver.default();
-            await this._driver.start(this._ctx, config.Config);
             await this._driver.setSessionID(SessionID)
             this._started = true;
         } catch (error) {

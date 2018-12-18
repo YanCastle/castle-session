@@ -9,7 +9,7 @@ export default class DefaultSession extends SessionDrvier {
         await mkdirs(this.path)
     }
     async exist(SessionID: string) {
-        return await fs.exists(join(this._config.path || '.sess', SessionID));
+        return await fs.exists(join((this._config ? this._config.path : undefined) || '.sess', SessionID));
     }
     async get(key: string) {
         try {
