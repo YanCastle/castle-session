@@ -1,6 +1,5 @@
 import Driver from "./session";
-import hook from '../../castle-config/dist/hook'
-import { CastleContext } from '../../castle-config/dist/index';
+import { CastleContext } from 'castle-config';
 import { resolve } from "path";
 import { decode, encode } from "./utils";
 import * as DefaultDriver from './driver/default'
@@ -13,7 +12,7 @@ export class Session {
     _driver: Driver = new Driver;
     protected _started = false;
     constructor(ctx: any) {
-        ctx.session = this;
+        // ctx.session = this;
         this._ctx = ctx;
     }
     /**
@@ -70,7 +69,7 @@ export class Session {
         let Value = await this._driver.get(Key)
         if (Value)
             Value = decode(Value);
-        await hook.emit(SessionHooks.GET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value })
+        // await hook.emit(SessionHooks.GET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value })
         return Value;
     }
     /**
@@ -83,7 +82,7 @@ export class Session {
             await this.start()
         }
         let value = encode(Value);
-        await hook.emit(SessionHooks.SET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value: value })
+        // await hook.emit(SessionHooks.SET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value: value })
         return await this._driver.set(Key, value);
     }
     /**
@@ -94,7 +93,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        await hook.emit(SessionHooks.DEL_SESSION, this._ctx, { SessionID: this._session_id, Key })
+        // await hook.emit(SessionHooks.DEL_SESSION, this._ctx, { SessionID: this._session_id, Key })
         return await this._driver.delete(Key);
     }
     /**
@@ -104,7 +103,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        await hook.emit(SessionHooks.DESTORY_SESSION, this._ctx, { SessionID: this._session_id })
+        // await hook.emit(SessionHooks.DESTORY_SESSION, this._ctx, { SessionID: this._session_id })
         return await this._driver.destory()
     }
     async end() {
@@ -129,3 +128,12 @@ export enum SessionHooks {
     NEW_SESSION = 'NEW_SESSION'
 }
 export const SessionDrvier = Driver
+/**
+ * 安装session拓展
+ * @param that 
+ * @param koa 
+ * @param conf 
+ */
+export function install(that: any, koa: any, conf: any) {
+    koa.use(session)
+}
