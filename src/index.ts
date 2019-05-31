@@ -20,7 +20,7 @@ export class Session {
      */
     async start() {
         try {
-            let config = await this._ctx.config.getSessionConfig();
+            let config: any = await this._ctx.config.getSessionConfig();
             let driver: any;
             if ('string' == typeof config.Driver) {
                 if ('default' == config.Driver) {
@@ -39,7 +39,7 @@ export class Session {
                 throw new Error('Unsupport Session Driver:' + config.Driver)
             }
             this._driver = new driver.default();
-            await this._driver.start(this._ctx, config.Config);
+            await this._driver.start(this._ctx, config.Config, config.DriverConfig || {});
             let SessionID = await this._ctx.config.getSessionID();
             while (!SessionID) {
                 SessionID = await this._ctx.config.getNewSessionID();

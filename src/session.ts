@@ -5,6 +5,7 @@ export default class Driver {
     _config: any;
     _SessionID: string = '';
     path: string = "";
+    dc: any = {}
     get SessionID() {
         return this._SessionID;
     }
@@ -15,9 +16,10 @@ export default class Driver {
     getKey(key: string) {
         return join(this.path, key)
     }
-    async start(ctx: any, config: any) {
+    async start(ctx: any, config: any, dc: any = {}) {
         this._ctx = ctx;
         this._config = config;
+        this.dc = dc;
     }
     async get(key: string): Promise<any> {
         throw new Error('Unsupport')

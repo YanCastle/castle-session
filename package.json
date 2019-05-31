@@ -16,6 +16,7 @@
     "mz": "^2.7.0"
   },
   "devDependencies": {
+    "@types/koa": "^2.0.48",
     "@types/mz": "^0.0.32"
   }
 }
