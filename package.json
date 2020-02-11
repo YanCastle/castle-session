@@ -1,6 +1,6 @@
 {
   "name": "@ctsy/session",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "repository": "https://github.com/YanCastle/castle-session",
   "author": "CastleMY <490523604@qq.com>",
   "license": "MIT",
@@ -12,7 +12,6 @@
     "yarn.lock"
   ],
   "dependencies": {
-    "castle-config": "*",
     "mz": "*"
   },
   "devDependencies": {
