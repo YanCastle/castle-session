@@ -1,5 +1,4 @@
 import Driver from "./session";
-import { CastleContext } from 'castle-config';
 import { resolve } from "path";
 import { decode, encode } from "./utils";
 import * as DefaultDriver from './driver/default'
@@ -7,7 +6,7 @@ import * as DefaultDriver from './driver/default'
  * Session操作
  */
 export class Session {
-    _ctx: CastleContext;
+    _ctx: any;
     _session_id: string = "";
     _driver: Driver = new Driver;
     protected _started = false;
