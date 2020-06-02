@@ -2,6 +2,7 @@ import Driver from "./session";
 import { resolve } from "path";
 import { decode, encode } from "./utils";
 import * as DefaultDriver from './driver/default'
+import hook, { HookWhen } from '@ctsy/hook'
 /**
  * Session操作
  */
@@ -113,8 +114,10 @@ export class Session {
 }
 export default async function session(ctx: any, next: Function) {
     //需要的时候才启动
+    await hook.emit(SessionHooks.SESSION, HookWhen.Before, ctx, ctx.session);
     ctx.session = new Session(ctx);
     // await ctx.session.start()
+    await hook.emit(SessionHooks.SESSION, HookWhen.After, ctx, ctx.session);
     await next()
     await ctx.session.end()
 }
@@ -124,7 +127,8 @@ export enum SessionHooks {
     DEL_SESSION = 'DEL_SESSION',
     SET_SESSION = 'SET_SESSION',
     DESTORY_SESSION = 'DESTORY_SESSION',
-    NEW_SESSION = 'NEW_SESSION'
+    NEW_SESSION = 'NEW_SESSION',
+    SESSION = 'SESSION'
 }
 export const SessionDrvier = Driver
 /**
