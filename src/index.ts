@@ -11,6 +11,10 @@ export class Session {
     _session_id: string = "";
     _driver: Driver = new Driver;
     protected _started = false;
+    /**
+     * 缓存
+     */
+    protected _cache: { [index: string]: any } = {};
     constructor(ctx: any) {
         // ctx.session = this;
         this._ctx = ctx;
@@ -52,6 +56,10 @@ export class Session {
             }
             this._session_id = SessionID;
             await this._driver.setSessionID(SessionID)
+            if (!this._cache[this._session_id])
+                this._cache[this._session_id] = {
+                    _time: Date.now(),
+                };
             this._started = true;
         } catch (error) {
             throw error;
@@ -65,6 +73,9 @@ export class Session {
     async get(Key: string) {
         if (!this._started) {
             await this.start()
+        }
+        if (this._cache[this._session_id][Key]) {
+            return this._cache[this._session_id][Key]
         }
         let Value = await this._driver.get(Key)
         if (Value)
@@ -81,6 +92,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
+        this._cache[this._session_id][Key] = Value;
         let value = encode(Value);
         // await hook.emit(SessionHooks.SET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value: value })
         return await this._driver.set(Key, value);
@@ -93,6 +105,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
+        delete this._cache[this._session_id][Key]
         // await hook.emit(SessionHooks.DEL_SESSION, this._ctx, { SessionID: this._session_id, Key })
         return await this._driver.delete(Key);
     }
@@ -103,6 +116,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
+        delete this._cache[this._session_id]
         // await hook.emit(SessionHooks.DESTORY_SESSION, this._ctx, { SessionID: this._session_id })
         return await this._driver.destory()
     }
