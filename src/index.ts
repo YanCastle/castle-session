@@ -3,6 +3,10 @@ import { resolve } from "path";
 import { decode, encode } from "./utils";
 import * as DefaultDriver from './driver/default'
 import hook, { HookWhen } from '@ctsy/hook'
+
+//  可能存在溢出风险
+const _cache: { [index: string]: { _time: number, [index: string]: any } } = {};
+
 /**
  * Session操作
  */
@@ -11,10 +15,6 @@ export class Session {
     _session_id: string = "";
     _driver: Driver = new Driver;
     protected _started = false;
-    /**
-     * 缓存
-     */
-    protected _cache: { [index: string]: any } = {};
     constructor(ctx: any) {
         // ctx.session = this;
         this._ctx = ctx;
@@ -56,10 +56,12 @@ export class Session {
             }
             this._session_id = SessionID;
             await this._driver.setSessionID(SessionID)
-            if (!this._cache[this._session_id])
-                this._cache[this._session_id] = {
+            if (!_cache[this._session_id])
+                _cache[this._session_id] = {
                     _time: Date.now(),
                 };
+            else
+                _cache[this._session_id]._time = Date.now()
             this._started = true;
         } catch (error) {
             throw error;
@@ -74,8 +76,8 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        if (this._cache[this._session_id][Key]) {
-            return this._cache[this._session_id][Key]
+        if (_cache[this._session_id][Key]) {
+            return _cache[this._session_id][Key]
         }
         let Value = await this._driver.get(Key)
         if (Value)
@@ -92,7 +94,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        this._cache[this._session_id][Key] = Value;
+        _cache[this._session_id][Key] = Value;
         let value = encode(Value);
         // await hook.emit(SessionHooks.SET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value: value })
         return await this._driver.set(Key, value);
@@ -105,7 +107,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        delete this._cache[this._session_id][Key]
+        delete _cache[this._session_id][Key]
         // await hook.emit(SessionHooks.DEL_SESSION, this._ctx, { SessionID: this._session_id, Key })
         return await this._driver.delete(Key);
     }
@@ -116,7 +118,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        delete this._cache[this._session_id]
+        delete _cache[this._session_id]
         // await hook.emit(SessionHooks.DESTORY_SESSION, this._ctx, { SessionID: this._session_id })
         return await this._driver.destory()
     }
@@ -153,4 +155,15 @@ export const SessionDrvier = Driver
  */
 export function install(that: any, koa: any, conf: any) {
     koa.use(session)
+    let session_cache_expire = 5 * 60 * 1000;
+    //清理session缓存
+    setInterval(() => {
+        let t = Date.now()
+        for (let x in _cache) {
+            let c = _cache[x];
+            if (c._time + session_cache_expire < t) {
+                delete _cache[x];
+            }
+        }
+    }, session_cache_expire)
 }
