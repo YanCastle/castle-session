@@ -1,6 +1,6 @@
 {
   "name": "@ctsy/session",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "repository": "https://github.com/YanCastle/castle-session",
   "author": "CastleMY <490523604@qq.com>",
   "license": "MIT",
@@ -13,10 +13,12 @@
   ],
   "dependencies": {
     "@ctsy/hook": "^0.0.6",
+    "lodash": "^4.17.20",
     "mz": "*"
   },
   "devDependencies": {
     "@types/koa": "*",
+    "@types/lodash": "^4.14.165",
     "@types/mz": "*",
     "@types/node": "^14.0.9"
   }
