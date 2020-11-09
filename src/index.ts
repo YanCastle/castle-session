@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { decode, encode } from "./utils";
 import * as DefaultDriver from './driver/default'
 import hook, { HookWhen } from '@ctsy/hook'
+import { get, set } from 'lodash'
 
 //  可能存在溢出风险
 const _cache: { [index: string]: { _time: number, [index: string]: any } } = {};
@@ -15,6 +16,9 @@ export class Session {
     _session_id: string = "";
     _driver: Driver = new Driver;
     protected _started = false;
+    _lock = false;
+    _locks: Function[] = [];
+    _session: any = {}
     constructor(ctx: any) {
         // ctx.session = this;
         this._ctx = ctx;
@@ -56,12 +60,12 @@ export class Session {
             }
             this._session_id = SessionID;
             await this._driver.setSessionID(SessionID)
-            if (!_cache[this._session_id])
-                _cache[this._session_id] = {
-                    _time: Date.now(),
-                };
-            else
-                _cache[this._session_id]._time = Date.now()
+            // if (!_cache[this._session_id])
+            //     _cache[this._session_id] = {
+            //         _time: Date.now(),
+            //     };
+            // else
+            //     _cache[this._session_id]._time = Date.now()
             this._started = true;
         } catch (error) {
             throw error;
@@ -76,14 +80,40 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        if (_cache[this._session_id][Key]) {
-            return _cache[this._session_id][Key]
+        await this.check()
+        console.log('get', Key, get(this._session, Key))
+        return get(this._session, Key);
+    }
+    async check() {
+        if (this._lock) {
+            return new Promise((s, j) => {
+                this._locks.push(s)
+            })
         }
-        let Value = await this._driver.get(Key)
-        if (Value)
-            Value = decode(Value);
-        // await hook.emit(SessionHooks.GET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value })
-        return Value;
+        this._lock = true;
+        if (!this._started) {
+            await this.start()
+        }
+        if (!this._session.__start) {
+            try {
+                let _s = (await this._driver.get('All')) || {};
+                if ('string' == typeof _s) {
+                    _s = decode(_s)
+                    // this._session = { __start: true, __save: false }
+                }
+                if ('string' == typeof _s) { _s = {} }
+                this._session = _s;
+                this._session.__start = true;
+                this._session.__save = false;
+            } catch (error) {
+                // debugger
+            }
+        }
+        this._lock = false;
+        for (let x of this._locks) {
+            x(true);
+        }
+        this._locks = []
     }
     /**
      * 设置键
@@ -91,13 +121,11 @@ export class Session {
      * @param Value 
      */
     async set(Key: string, Value: any) {
-        if (!this._started) {
-            await this.start()
-        }
-        _cache[this._session_id][Key] = Value;
-        let value = encode(Value);
-        // await hook.emit(SessionHooks.SET_SESSION, this._ctx, { SessionID: this._session_id, Key, Value: value })
-        return await this._driver.set(Key, value);
+        await this.check()
+        set(this._session, Key, Value)
+        this._session.__save = true;
+        // console.log('set', Key, Value)
+        return true;
     }
     /**
      * 删除某个键
@@ -107,7 +135,7 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        delete _cache[this._session_id][Key]
+        // delete _cache[this._session_id][Key]
         // await hook.emit(SessionHooks.DEL_SESSION, this._ctx, { SessionID: this._session_id, Key })
         return await this._driver.delete(Key);
     }
@@ -118,13 +146,17 @@ export class Session {
         if (!this._started) {
             await this.start()
         }
-        delete _cache[this._session_id]
+        // delete _cache[this._session_id]
         // await hook.emit(SessionHooks.DESTORY_SESSION, this._ctx, { SessionID: this._session_id })
         return await this._driver.destory()
     }
     async end() {
         if (this._started) {
-            this._driver.end()
+            if (this._session.__save) {
+                console.log('end save', this._session_id)
+                await this._driver.set('All', encode(this._session));
+            }
+            await this._driver.end()
         }
     }
 }

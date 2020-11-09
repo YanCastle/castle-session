@@ -45,6 +45,7 @@ export function decode(data: string): any {
             return t.Data;
             break;
     }
+    return data;
 }
 /**
  * 编码
