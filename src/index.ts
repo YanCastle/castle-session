@@ -81,7 +81,7 @@ export class Session {
             await this.start()
         }
         await this.check()
-        console.log('get', Key, get(this._session, Key))
+        // console.log('get', Key, get(this._session, Key))
         return get(this._session, Key);
     }
     async check() {
@@ -153,7 +153,7 @@ export class Session {
     async end() {
         if (this._started) {
             if (this._session.__save) {
-                console.log('end save', this._session_id)
+                // console.log('end save', this._session_id)
                 await this._driver.set('All', encode(this._session));
             }
             await this._driver.end()
