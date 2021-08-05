@@ -1,6 +1,6 @@
 {
   "name": "@ctsy/session",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "repository": "https://github.com/YanCastle/castle-session",
   "author": "CastleMY <490523604@qq.com>",
   "license": "MIT",
@@ -11,6 +11,9 @@
     "dist/**/*.d.ts",
     "yarn.lock"
   ],
+  "scripts": {
+    "prepublishOnly": "tsc"
+  },
   "dependencies": {
     "@ctsy/hook": "*",
     "lodash": "*",
