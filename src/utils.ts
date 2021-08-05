@@ -24,9 +24,18 @@ export function getDataType(data: any): DataType {
  * 解码
  * @param data 
  */
-export function decode(data: string): any {
+export function decode(data: string, expire = 259200): any {
+    console.log(data)
     let dt = Number(data.substr(0, 1))
-    let t = { Data: data.substr(1) }
+    let time = Number(data.substr(1, 10))
+    let end = 1
+    if (time > 0) {
+        end = 11
+        if (Date.now() - time * 1000 > expire * 1000) {
+            return {}
+        }
+    }
+    let t = { Data: data.substr(end) }
     switch (dt) {
         case DataType.JSON:
             return JSON.parse(t.Data.toString())
@@ -62,7 +71,7 @@ export function encode(Data: any) {
             data = data ? 1 : 0;
             break;
     }
-    return [type, data].join('')
+    return [type, Math.ceil(Date.now() / 1000), data].join('')
 }
 
 
